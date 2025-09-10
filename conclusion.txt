@@ -1,0 +1,8 @@
+{
+    "email": "democafe@gmail.com",
+    "password": "ahmed 2003",
+    "confirmPassword": "ahmed 2003",
+    "firstName": "stock",
+    "lastName": "gestion",
+    "role": "admin"
+  }

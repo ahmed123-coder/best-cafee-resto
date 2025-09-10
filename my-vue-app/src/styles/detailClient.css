@@ -1,0 +1,81 @@
+.detail-client {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 25px;
+  background-color: #fdfdfd;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.3s ease;
+}
+
+.detail-client.dark-mode {
+  background-color: #1e1e1e;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.05);
+}
+
+.detail-client form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.detail-client label {
+  font-weight: 600;
+  margin-bottom: 5px;
+  display: block;
+  color: inherit;
+}
+
+.detail-client input,
+.detail-client select {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  transition: border-color 0.2s ease;
+  font-size: 14px;
+  background-color: #fff;
+  color: #333;
+}
+
+.dark-mode input,
+.dark-mode select {
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #555;
+}
+
+.detail-client input:focus,
+.detail-client select:focus {
+  outline: none;
+  border-color: #2196f3;
+}
+
+.detail-client button[type="submit"] {
+  padding: 12px;
+  font-weight: bold;
+  border-radius: 5px;
+  border: none;
+  background-color: #2196f3;
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.detail-client button[type="submit"]:hover {
+  background-color: #1976d2;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .detail-client {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  .detail-client input,
+  .detail-client select {
+    font-size: 16px;
+  }
+}

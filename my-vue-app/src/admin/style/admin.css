@@ -1,0 +1,222 @@
+.admin-sidebar {
+  background: linear-gradient(135deg, #2563eb 60%, #38e8ff 100%);
+  padding: 28px 18px 24px 18px;
+  min-width: 220px;
+  max-width: 270px;
+  min-height: 100vh;
+  box-shadow: 2px 0 16px 0 #2563eb22;
+  border-radius: 0 18px 18px 0;
+  transition: background 0.3s, box-shadow 0.3s;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.admin-title {
+  font-size: 1.7rem;
+  margin-bottom: 28px;
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 8px #0002;
+  width: 100%;
+  text-align: left;
+}
+
+.admin-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+.admin-nav ul li {
+  margin: 10px 0;
+  width: 100%;
+}
+
+.admin-nav ul li a {
+  text-decoration: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  border-radius: 10px;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  font-size: 1.08rem;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 6px 0 #2563eb11;
+  gap: 10px;
+}
+.admin-nav ul li a i {
+  font-size: 20px;
+  margin-right: 8px;
+  color: #38e8ff;
+  transition: color 0.2s;
+}
+.admin-nav ul li a:hover,
+.admin-nav ul li a.active {
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 4px 16px 0 #38e8ff22;
+}
+.admin-nav ul li a:hover i,
+.admin-nav ul li a.active i {
+  color: #2563eb;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .admin-sidebar {
+    min-width: 170px;
+    max-width: 210px;
+    padding: 18px 8px 16px 8px;
+  }
+  .admin-title {
+    font-size: 1.2rem;
+    margin-bottom: 18px;
+  }
+  .admin-nav ul li a {
+    font-size: 0.98rem;
+    padding: 10px 10px;
+  }
+}
+@media (max-width: 900px) {
+  .admin-sidebar {
+    min-width: 100vw;
+    max-width: 100vw;
+    min-height: auto;
+    border-radius: 0 0 18px 18px;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 0 10px 0;
+    box-shadow: 0 2px 16px 0 #2563eb22;
+  }
+  .admin-title {
+    display: none;
+  }
+  .admin-nav ul {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    justify-content: center;
+    align-items: center;
+  }
+  .admin-nav ul li {
+    margin: 0 4px;
+    width: auto;
+  }
+  .admin-nav ul li a {
+    padding: 8px 10px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+  }
+}
+@media (max-width: 600px) {
+  .admin-sidebar {
+    padding: 4px 0 4px 0;
+    min-width: 100vw;
+    max-width: 100vw;
+    border-radius: 0 0 12px 12px;
+  }
+  .admin-nav ul li a {
+    padding: 7px 6px;
+    font-size: 0.89rem;
+  }
+}
+/* ...existing styles... */
+
+.admin-sidebar-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1200;
+  height: 100vh;
+  width: 250px;
+  background: linear-gradient(135deg, #2563eb 60%, #38e8ff 100%);
+  box-shadow: 2px 0 16px 0 #2563eb22;
+  border-radius: 0 18px 18px 0;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  transform: translateX(-110%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.admin-sidebar-fixed.open {
+  transform: translateX(0);
+}
+.admin-sidebar-content {
+  width: 100%;
+  padding: 28px 18px 24px 18px;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.admin-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 14px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s;
+}
+.admin-close-btn:hover {
+  color: #2563eb;
+  background: #fff2;
+  border-radius: 50%;
+}
+.admin-toggle-btn {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 1300;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.5rem;
+  box-shadow: 0 2px 8px #2563eb22;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+.admin-toggle-btn:hover {
+  background: #38e8ff;
+  color: #2563eb;
+}
+
+/* Responsive: sidebar overlays content on small screens */
+@media (max-width: 900px) {
+  .admin-sidebar-fixed {
+    width: 80vw;
+    min-width: 180px;
+    max-width: 350px;
+    border-radius: 0 18px 18px 0;
+  }
+  .admin-sidebar-content {
+    padding: 18px 8px 16px 8px;
+  }
+}
+@media (max-width: 600px) {
+  .admin-sidebar-fixed {
+    width: 95vw;
+    min-width: 0;
+    border-radius: 0 12px 12px 0;
+  }
+  .admin-toggle-btn {
+    width: 38px;
+    height: 38px;
+    font-size: 1.2rem;
+    top: 8px;
+    left: 8px;
+  }
+}

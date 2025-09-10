@@ -1,0 +1,236 @@
+/* 📌 Table Management Container */
+.table-management {
+  margin-left: 260px; /* space for sidebar */
+  padding: 24px;
+  min-height: 100vh;
+  background: #f9fafb;
+  transition: margin-left 0.3s ease;
+}
+
+.table-management h1 {
+  font-size: 2rem;
+  color: #2563eb;
+  margin-bottom: 20px;
+}
+
+/* 📌 Table Form */
+.table-form {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #2563eb22;
+  margin-bottom: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.table-form .form-group {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-form label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.table-form input,
+.table-form select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.table-form input:focus,
+.table-form select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 6px #2563eb33;
+  outline: none;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.submit-btn,
+.cancel-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.submit-btn {
+  background: #2563eb;
+  color: #fff;
+}
+
+.submit-btn:hover {
+  background: #1746b0;
+  transform: translateY(-1px);
+}
+
+.cancel-btn {
+  background: #f3f4f6;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background: #e5e7eb;
+}
+
+/* 📌 Table List */
+.table-list {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px #2563eb22;
+}
+
+.table-list h2 {
+  margin-bottom: 16px;
+  font-size: 1.5rem;
+  color: #2563eb;
+}
+
+/* 📌 Table Card */
+.table-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  background: #fafafa;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.table-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 16px #2563eb22;
+}
+
+/* 📌 Left Side (info) */
+.table-info {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.table-item span {
+  font-weight: bold;
+  color: #2563eb;
+}
+
+/* 📌 Right Side (QR + actions) */
+.table-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.qr-code {
+  text-align: center;
+}
+
+.qr-code canvas {
+  border: 2px solid #2563eb;
+  border-radius: 10px;
+  padding: 6px;
+  background: #fff;
+}
+
+.qr-code p {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+/* 📌 Table Actions */
+.table-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-btn,
+.delete-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.edit-btn {
+  background: #38bdf8;
+  color: #fff;
+}
+
+.edit-btn:hover {
+  background: #0ea5e9;
+  transform: translateY(-1px);
+}
+
+.delete-btn {
+  background: #ef4444;
+  color: #fff;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* ✅ Responsive */
+@media (max-width: 900px) {
+  .table-management {
+    margin-left: 0;
+    padding: 16px;
+  }
+
+  .table-form {
+    flex-direction: column;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .submit-btn,
+  .cancel-btn {
+    width: 100%;
+  }
+
+  .table-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .table-right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .table-actions {
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+  }
+}

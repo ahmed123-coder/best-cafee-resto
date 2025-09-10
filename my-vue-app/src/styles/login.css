@@ -1,0 +1,104 @@
+:root {
+  --primary-color: #3498db;
+  --secondary-color: #2ecc71;
+  --color-button-in-dark1:#ffffff;
+  --color-p-in-white1:#0a0a0a;
+  --color-background-in-dark1:#000000;
+  --color-button-in-white1:#0a0a0a;
+  --color-button-in-white2:#3d3d3d;
+  --color-p-in-dark1:#ffffff;
+  --color-background-in-white1:#ffffff;
+  --color-p-in-white2:#666;
+  --font-size: 16px;
+}
+/* Login Container */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color:var(--color-background-in-white1);
+    font-family: Arial, sans-serif;
+  }
+  
+  /* Login Box */
+  .login-box {
+    background-color:var(--color-background-in-white1);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+  }
+  
+  .login-box h1 {
+    font-size: 2rem;
+    color: var(--color-p-in-white1);
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Error Message */
+  .error-message {
+    color: #ff4d4d;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Form Group */
+  .form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+  }
+  
+  .form-group label {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--color-p-in-white1);
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: border-color 0.3s ease;
+  }
+  
+  .form-group input:focus {
+    border-color: #007bff;
+    outline: none;
+  }
+  
+  /* Login Button */
+  .login-button {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .login-button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 480px) {
+    .login-box {
+      padding: 1.5rem;
+    }
+  
+    .login-box h1 {
+      font-size: 1.75rem;
+    }
+  }
+  .login-container.dark-mode .login-container{
+    background-color:var(--color-background-in-dark1);
+  }
