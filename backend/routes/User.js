@@ -88,6 +88,7 @@ router.post("/", async (req, res) => {
     });
 
     await newUser.save();
+    req.emit("newUser", newUser); // Emit event when a new user is created
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error(error);
@@ -128,6 +129,7 @@ router.post("/admin", async (req, res) => {
     });
 
     await newUser.save();
+    req.emit("newUser", newUser);
     res.status(201).json({ message: "Admin registered successfully" });
   } catch (error) {
     console.error(error);
@@ -147,7 +149,7 @@ router.get("/", async (req, res)=>{
     if(!user){
       return res.status(404).json({ message: "User not found" });
     }
-    if(user.role === "admin"){
+    if(user.role === "admin" || user.role === "chef"){
       const users = await User.find();
       res.status(200).json(users);
     }
@@ -170,6 +172,7 @@ router.delete("/:id", async (req, res)=>{
       if(user.role === "admin"){
         const userid = req.params.id;
         await User.findByIdAndDelete(userid);
+        req.emit("userDeleted", userid);
         res.status(200).json({ message: "User deleted successfully" });
       }
     }catch(error){
@@ -218,7 +221,7 @@ router.put("/:id", async (req, res) => {
       
             // Save the updated user
             await userput.save();
-      
+            req.emit("userUpdated", userput);
             res.status(200).json({ message: "User updated successfully", userput });
     }
   } catch (error) {

@@ -3,8 +3,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/CartSidebar.css";
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 
-function ServerCartUserSidebarstore({
+function CartSidebarserverchef({
   cartProducts = [],
   cartGroups = [],
   onQuantityChange,
@@ -20,7 +21,9 @@ function ServerCartUserSidebarstore({
   const location = useLocation();
   const { productId, groupId, quantity } = location.state || {};
   const [user, setUser] = useState(null);
+  const Socket = io("http://localhost:3000");
 
+  
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -36,6 +39,20 @@ function ServerCartUserSidebarstore({
       };
       fetchUser();
     }
+              // all soket io of user deleted
+        Socket.on("userDeleted", (userid) => {
+          if (userid === user._id) {
+            // Handle user deletion (e.g., log out the user, show a message, etc.)
+            setUser(null);
+            // to login
+            window.location.href = "/login";
+            localStorage.removeItem("token");
+            console.log("User deleted:", userid);
+          }
+        });
+    return () => {
+      Socket.off("userDeleted");
+    };
   }, []);
 
   // توليد نص الفاتورة للطباعة
@@ -172,16 +189,16 @@ function ServerCartUserSidebarstore({
         }
       );
       console.log("Order created successfully:", responseOrder.data);
-      localStorage.removeItem("guestCart");
+      localStorage.removeItem("serverCart");
 
       // طباعة الفاتورة مباشرة
       printOrder(responseOrder.data);
       // remove the cart from local storage
-      localStorage.removeItem("guestCart");
+      localStorage.removeItem("serverCart");
       // remove setCartProducts and setCartGroups
       setProducts([]);
       setGroups([]);
-      navigate("/store");
+      navigate("/server");
     } catch (err) {
       console.error("Error creating order:", err);
       alert("حدث خطأ أثناء إنشاء الطلب: " + (err.response?.data?.error || err.message));
@@ -273,4 +290,4 @@ function ServerCartUserSidebarstore({
   );
 }
 
-export default ServerCartUserSidebarstore;
+export default CartSidebarserverchef;

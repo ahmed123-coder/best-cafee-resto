@@ -70,8 +70,8 @@ router.get("/:id", async (req, res) => {
               }
           }
           const updatedGroup = await ProductGroup.findByIdAndUpdate(req.params.id, updateData, { new: true });
+          req.emit("updateProductGroup", updatedGroup);
           res.status(200).json(updatedGroup);
-          res.status(200).json(group);
         }
     }catch(error){
         res.status(500).json({ error: "Error updating product group" });
@@ -100,6 +100,7 @@ router.post("/", upload.single("image"),async (req, res)=>{
             }
             const productGroup = new ProductGroup({name, description, products, price, image});
             await productGroup.save();
+            req.emit("newProductGroup", productGroup);
             res.status(201).json(productGroup);
         }
     }catch(error){
@@ -121,7 +122,8 @@ router.delete("/:id", async (req, res)=>{
     if(user.role === "admin"){
       const idgroup = req.params.id;
       await ProductGroup.findByIdAndDelete(idgroup);
-      res.status(200).json({ message: "User deleted successfully" });
+      req.emit("deleteProductGroup", idgroup);
+      res.status(200).json({ message: "Product group deleted successfully" });
     }
   }catch(error){
     res.status(200).json({error: error.message});

@@ -32,6 +32,7 @@ router.post("/", async (req, res) => {
     });
 
     await newTable.save();
+    req.emit("newTable", newTable);
     res.status(201).json(newTable);
   } catch (error) {
     console.error("❌ Error in POST /tables:", error);
@@ -75,6 +76,7 @@ router.put("/:id", async (req, res) => {
     if (serverId) table.serverId = serverId;
 
     await table.save();
+    req.emit("updateTable", table);
     res.status(200).json(table);
   } catch (error) {
     console.error("❌ Error in PUT /tables:", error);
@@ -97,6 +99,7 @@ router.delete("/:id", async (req, res) => {
     }
 
     await Table.findByIdAndDelete(req.params.id);
+    req.emit("deleteTable", req.params.id);
     res.status(200).json({ message: "Table deleted successfully" });
   } catch (error) {
     console.error("❌ Error deleting table:", error);
@@ -119,9 +122,10 @@ router.get("/my-tables", async (req, res) => {
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ error: "User not found" });
-    if(user.role !== "server") return res.status(403).json({ error: "Unauthorized" });
-    const tables = await Table.find({ serverId: user._id });
-    res.status(200).json(tables);
+    if (user.role === "admin" || user.role === "server") {
+      const tables = await Table.find({ serverId: user._id });
+      return res.status(200).json(tables);
+    }
   } catch (error) {
     console.error("❌ Error in GET /tables/my-tables:", error);
     res.status(500).json({ error: error.message });

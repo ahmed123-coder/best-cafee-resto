@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "../styles/selecttable.css";  // 👈 استدعاء ملف CSS
 import { io } from "socket.io-client";  // 👈
 
-function SelectTable({ selectedTable, setSelectedTable }) {
+function SelectTablechef({ selectedTable, setSelectedTable }) {
   const [tables, setTables] = useState([]);
   const token = localStorage.getItem("token");
-  const Socket = io("http://localhost:3000");
+  const Socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
 
   useEffect(() => {
     const fetchTables = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/tables/my-tables", {
+        const res = await axios.get("http://localhost:3000/api/tables", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTables(res.data);
@@ -20,7 +19,6 @@ function SelectTable({ selectedTable, setSelectedTable }) {
       }
     };
     if (token) fetchTables();
-
     // all soket io of table updated
     Socket.on("updateTable", (updatedTable) => {
       setTables((prevTables) =>
@@ -63,4 +61,4 @@ function SelectTable({ selectedTable, setSelectedTable }) {
   );
 }
 
-export default SelectTable;
+export default SelectTablechef;

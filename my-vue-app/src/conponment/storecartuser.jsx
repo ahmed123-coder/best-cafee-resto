@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/CartSidebar.css";
 import axios from "axios";
 import { useState, useEffect } from "react";
+import { io } from "socket.io-client";  // 👈
 
 function CartUserSidebarstore({
   cartProducts = [],
@@ -20,6 +21,7 @@ function CartUserSidebarstore({
   const location = useLocation();
   const { productId, groupId, quantity } = location.state || {};
   const [user, setUser] = useState(null);
+  const Socket = io("http://localhost:3000");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -36,6 +38,18 @@ function CartUserSidebarstore({
       };
       fetchUser();
     }
+    // all soket io of user deleted
+    Socket.on("userDeleted", (userid) => {
+      if (userid === user._id) {
+        // Handle user deletion (e.g., log out the user, show a message, etc.)
+        setUser(null);
+        localStorage.removeItem("token");
+        console.log("User deleted:", userid);
+      }
+      return () => {
+        Socket.off("userDeleted");
+      };
+    });
   }, []);
 
   // توليد نص الفاتورة للطباعة
@@ -178,7 +192,6 @@ function CartUserSidebarstore({
       // remove setCartProducts and setCartGroups
       setProducts([]);
       setGroups([]);
-      navigate("/store");
     } catch (err) {
       console.error("Error creating order:", err);
       alert("حدث خطأ أثناء إنشاء الطلب: " + (err.response?.data?.error || err.message));

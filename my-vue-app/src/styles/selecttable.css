@@ -1,0 +1,71 @@
+:root {
+  --table-bg: #fff;
+  --table-bg-dark: #181c2a;
+  --table-border: #e0e7ef;
+  --table-border-dark: #2a2f3e;
+  --table-text: #222;
+  --table-text-dark: #eaeaea;
+  --table-accent: #4f8cff;
+  --table-accent2: #38e8ff;
+}
+
+body.dark-mode {
+  --table-bg: #181c2a;
+  --table-border: #2a2f3e;
+  --table-text: #eaeaea;
+}
+
+.select-table {
+  background: var(--table-bg);
+  padding: 1rem 1.5rem;
+  margin: 1rem auto;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(80, 120, 200, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 500px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.select-table label {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--table-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.select-table select {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  border: 1.5px solid var(--table-border);
+  border-radius: 12px;
+  background: var(--table-bg);
+  color: var(--table-text);
+  cursor: pointer;
+  transition: border 0.2s, box-shadow 0.2s;
+  outline: none;
+  min-width: 180px;
+}
+
+.select-table select:focus {
+  border: 1.5px solid var(--table-accent);
+  box-shadow: 0 0 6px var(--table-accent2);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .select-table {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .select-table select {
+    width: 100%;
+  }
+}

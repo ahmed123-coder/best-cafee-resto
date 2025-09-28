@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 const express = require("express");
 const router = express.Router();
@@ -56,6 +55,7 @@ router.post("/", upload.single("image"), async (req, res) => {
       isActive,
     });
     await newProduct.save();
+    req.emit("newProduct", newProduct);
     res.status(201).json(newProduct);
   } catch (error) {
     console.error("❌ Error in POST /products:", error);
@@ -112,6 +112,7 @@ router.put("/:id", upload.single("image"), async (req, res) => {
     if (image) product.image = image;
 
     await product.save();
+    req.emit("updateProduct", product);
     res.status(200).json(product);
   } catch (error) {
     console.error("❌ Error in PUT /products:", error);
@@ -135,6 +136,7 @@ router.delete("/:id", async (req, res) => {
     }
 
     await Product.findByIdAndDelete(req.params.id);
+    req.emit("deleteProduct", req.params.id);
     res.status(200).json({ message: "Product deleted successfully" });
   } catch (error) {
     console.error("❌ Error deleting product:", error);

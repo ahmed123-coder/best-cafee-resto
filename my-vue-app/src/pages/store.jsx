@@ -6,11 +6,13 @@ import CartUserSidebarstore from "../conponment/storecartuser";
 import Navbar from "../conponment/storenavbar";
 import Orderstore from "../conponment/orderstore";
 import axios from "axios";
+import { io } from "socket.io-client";  // 👈
+
 
 function Store() {
   const [searchParams] = useSearchParams();
   const tableId = searchParams.get("tableId");   // ⬅️ هنا ناخذ tableId من QR
-
+  const socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
   const location = useLocation();
   const token = localStorage.getItem("token") || "";
   const { productId, groupId, quantity } = location.state || {};
@@ -45,7 +47,7 @@ function Store() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data);
-        if (response.data.role === "server" ) {
+        if (response.data.role === "server" || response.data.role === "chef") {
           window.location.href = "/login";
         }
       } catch (error) {
@@ -68,6 +70,38 @@ function Store() {
     };
     setCartProducts(storedCart.products || []);
     setCartGroups(storedCart.groupproducts || []);
+      socket.on("newProduct", (newProduct) => {
+    setProducts((prev) => [newProduct, ...prev]);
+  });
+  socket.on("updateProduct", (updatedProduct) => {
+    setProducts((prev) =>
+      prev.map((p) => (p._id === updatedProduct._id ? updatedProduct : p))
+    );
+  });
+  socket.on("deleteProduct", (id) => {
+    setProducts((prev) => prev.filter((p) => p._id !== id));
+    
+  });
+  socket.on("newProductGroup", (newProductGroup) => {
+    setGroups((prev) => [newProductGroup, ...prev]);
+  });
+  socket.on("updateProductGroup", (updatedProductGroup) => {
+    setGroups((prev) =>
+      prev.map((p) => (p._id === updatedProductGroup._id ? updatedProductGroup : p))
+    );
+  });
+  socket.on("deleteProductGroup", (id) => {
+    setGroups((prev) => prev.filter((p) => p._id !== id));
+  });
+
+    return () => {
+      socket.off("newProduct");
+      socket.off("updateProduct");
+      socket.off("deleteProduct");
+      socket.off("newProductGroup");
+      socket.off("updateProductGroup");
+      socket.off("deleteProductGroup");
+    };
   }, [token]);
 
   const handleSearch = (term) => setSearchTerm(term.toLowerCase());
@@ -140,6 +174,7 @@ function Store() {
   return (
     <div className="homepage">
       <Navbar 
+        to={"/store"}
         token={token}
         isCartOpen={isCartOpen}
         setIsCartOpen={setIsCartOpen}

@@ -32,6 +32,9 @@ function Admin() {
           <nav className="admin-nav">
             <ul>
               <li>
+                <Link to="/server"><i className="bi bi-server"></i> Server</Link>
+              </li>
+              <li>
                 <Link to="/store"><i className="bi bi-house-door"></i> Store</Link>
               </li>
               <li>

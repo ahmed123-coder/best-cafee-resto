@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import SelectTable from "./SelectTable";
 import "../admin/style/Ordere.css";
+import { io } from "socket.io-client";  // 👈
 
-const Orderstore = ({ onClose }) => {
+const Orderserver = ({ onClose }) => {
   const [details, setDetails] = useState();
   const [status, setStatus] = useState(null);
+  const socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
 
   const [dataorder, setDataorder] = useState({
     customer: "",
@@ -12,6 +15,8 @@ const Orderstore = ({ onClose }) => {
     productGroups: [],
     paymentMethod: "cash",
     status: "confirmed",
+    isInStore: true,
+    tableId: null,
   });
 
   const [orders, setOrders] = useState([]);
@@ -33,25 +38,87 @@ const Orderstore = ({ onClose }) => {
   useEffect(() => {
     if (me._id) {
       fetchOrders();
+       // 📡 لو أوردر اتعمله create
+  socket.on("orderCreated", (newOrder) => {
+    setOrders((prev) => [newOrder, ...prev]);
+  });
+
+  // 📡 لو أوردر اتعمله update
+  socket.on("orderUpdated", (updatedOrder) => {
+    setOrders((prev) =>
+      prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o))
+    );
+  });
+
+  // 📡 لو أوردر اتعمله delete
+  socket.on("orderDeleted", (id) => {
+    setOrders((prev) => prev.filter((o) => o._id !== id));
+  });
+  // all soket io of products and product groups
+  socket.on("newProduct", (newProduct) => {
+    setProducts((prev) => [newProduct, ...prev]);
+  });
+  socket.on("updateProduct", (updatedProduct) => {
+    setProducts((prev) =>
+      prev.map((p) => (p._id === updatedProduct._id ? updatedProduct : p))
+    );
+  });
+  socket.on("deleteProduct", (id) => {
+    setProducts((prev) => prev.filter((p) => p._id !== id));
+  });
+  socket.on("newProductGroup", (newProductGroup) => {
+    setProductGroups((prev) => [newProductGroup, ...prev]);
+  });
+  socket.on("updateProductGroup", (updatedProductGroup) => {
+    setProductGroups((prev) =>
+      prev.map((pg) =>
+        pg._id === updatedProductGroup._id ? updatedProductGroup : pg
+      )
+    );
+  });
+  socket.on("deleteProductGroup", (id) => {
+    setProductGroups((prev) => prev.filter((pg) => pg._id !== id));
+  });
+  return () => {
+    socket.off("orderCreated");
+    socket.off("orderUpdated");
+    socket.off("orderDeleted");
+    socket.off("newProduct");
+    socket.off("updateProduct");
+    socket.off("deleteProduct");
+    socket.off("newProductGroup");
+    socket.off("updateProductGroup");
+    socket.off("deleteProductGroup");
+  };
     }
     // eslint-disable-next-line
   }, [me._id]);
 
   const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const id = me._id;
-      if (!id) return;
-      const response = await axios.get(`http://localhost:3000/api/orders/in-store/server/${id}`, {
+  setLoading(true);
+  try {
+    const id = me._id;
+    if (!id) return;
+
+    // حساب start (قبل 24 ساعة) و end (الوقت الحالي)
+    const end = new Date();
+    const start = new Date();
+    start.setHours(start.getHours() - 24);
+
+    const response = await axios.get(
+      `http://localhost:3000/api/orders/in-store/server/${id}?start=${start.toISOString()}&end=${end.toISOString()}`,
+      {
         headers: { Authorization: `Bearer ${token}` },
-      });
-      setOrders(response.data);
-    } catch (err) {
-      console.error("Error fetching orders:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+      }
+    );
+    setOrders(response.data);
+  } catch (err) {
+    console.error("Error fetching orders:", err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const fetchme = async () => {
     try {
@@ -78,7 +145,9 @@ const Orderstore = ({ onClose }) => {
 
   const fetchProductGroups = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/groupproducts");
+      const response = await axios.get(
+        "http://localhost:3000/api/groupproducts"
+      );
       setProductGroups(response.data);
     } catch (error) {
       console.error("Error fetching product groups:", error);
@@ -87,10 +156,13 @@ const Orderstore = ({ onClose }) => {
 
   const updateorder = async (id, orderData) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/in-store`, orderData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchOrders();
+      await axios.put(
+        `http://localhost:3000/api/orders/${id}/in-store`,
+        orderData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
     } catch (err) {
       alert("Error updating order");
     }
@@ -98,10 +170,13 @@ const Orderstore = ({ onClose }) => {
 
   const updateStatus = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/delivered/in-store`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchOrders();
+      await axios.put(
+        `http://localhost:3000/api/orders/${id}/delivered/in-store`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
     } catch (err) {
       alert("Error updating status");
     }
@@ -109,12 +184,39 @@ const Orderstore = ({ onClose }) => {
 
   const updateStatuspending = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/pending/in-store`, {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      fetchOrders();
+      await axios.put(
+        `http://localhost:3000/api/orders/${id}/pending/in-store`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
     } catch (err) {
       alert("Error updating status to pending");
+    }
+  };
+
+  const updateStatuspaid = async (id) => {
+    try {
+      await axios.put(
+        `http://localhost:3000/api/orders/${id}/paid/in-store`
+      );
+    } catch (err) {
+      alert("Error updating status to paid");
+    }
+  };
+
+  const updateStatusconfirmed = async (id) => {
+    try {
+      await axios.put(
+        `http://localhost:3000/api/orders/${id}/confirmed/in-store`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch (err) {
+      alert("Error updating status to confirmed");
     }
   };
 
@@ -124,20 +226,118 @@ const Orderstore = ({ onClose }) => {
       await axios.delete(`http://localhost:3000/api/orders/${id}/in-store`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchOrders();
     } catch (err) {
       alert("Error deleting order");
     }
   };
 
+    // توليد نص الفاتورة للطباعة
+  function generateReceipt(order) {
+    let receipt = `رقم الدور: ${order.queueNumber}\n`;
+    receipt += `-----------------------------\n`;
+    receipt += `المنتجات:\n`;
+    if (order.products && order.products.length > 0) {
+      order.products.forEach((item) => {
+        receipt += `- ${item.product.name} x${item.quantity} = ${item.product.price * item.quantity} دج\n`;
+      });
+    }
+    if (order.productGroups && order.productGroups.length > 0) {
+      receipt += `مجموعات المنتجات:\n`;
+      order.productGroups.forEach((item) => {
+        receipt += `- ${item.group.name} x${item.quantity} = ${item.group.price * item.quantity} دج\n`;
+      });
+    }
+    receipt += `-----------------------------\n`;
+    receipt += `الإجمالي: ${order.totalPrice} دج\n`;
+    receipt += `طريقة الدفع: ${order.paymentMethod}\n`;
+    receipt += `-----------------------------\n`;
+    receipt += `شكراً لتسوقكم معنا!\n`;
+    return receipt;
+  }
+
+    function printOrder(order) {
+  const receipt = generateReceipt(order).replace(/\n/g, "<br>");
+  const printWindow = window.open("", "_blank", "width=300,height=600");
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>فاتورة الطلب</title>
+        <style>
+          body {
+            font-family: 'Cairo', 'Tahoma', 'monospace', Arial, sans-serif;
+            font-size: 15px;
+            direction: rtl;
+            text-align: right;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+          }
+          .receipt {
+            width: 260px;
+            margin: 0 auto;
+            padding: 12px 0;
+          }
+          .receipt-title {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+          }
+          .receipt hr {
+            border: none;
+            border-top: 1.5px dashed #888;
+            margin: 8px 0;
+          }
+          .receipt .total {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 8px;
+            text-align: center;
+          }
+          .receipt .thanks {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 15px;
+            letter-spacing: 1px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="receipt-title">فاتورة الطلب</div>
+          <hr>
+          ${receipt}
+          <hr>
+          <div class="thanks">نتمنى لكم يوماً سعيداً</div>
+        </div>
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(() => window.close(), 500);
+          }
+        </script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
+}
   const editedorder = async (order) => {
     setEditorder(order._id);
     setDataorder({
       customer: order.customer?._id || "",
-      products: order.products.map((p) => ({ product: p.product._id, quantity: p.quantity })),
-      productGroups: order.productGroups.map((pg) => ({ group: pg.group._id, quantity: pg.quantity })),
+      products: order.products.map((p) => ({
+        product: p.product._id,
+        quantity: p.quantity,
+      })),
+      productGroups: order.productGroups.map((pg) => ({
+        group: pg.group._id,
+        quantity: pg.quantity,
+      })),
       paymentMethod: order.paymentMethod,
       status: order.status,
+      isInStore: true,
+      tableId: order.tableId || null,
     });
     console.log("order", order);
   };
@@ -155,19 +355,31 @@ const Orderstore = ({ onClose }) => {
   };
 
   const removeProduct = (index) => {
-    setDataorder({ ...dataorder, products: dataorder.products.filter((_, i) => i !== index) });
+    setDataorder({
+      ...dataorder,
+      products: dataorder.products.filter((_, i) => i !== index),
+    });
   };
 
   const removeGroup = (index) => {
-    setDataorder({ ...dataorder, productGroups: dataorder.productGroups.filter((_, i) => i !== index) });
+    setDataorder({
+      ...dataorder,
+      productGroups: dataorder.productGroups.filter((_, i) => i !== index),
+    });
   };
 
   const addProduct = () => {
-    setDataorder({ ...dataorder, products: [...dataorder.products, { product: "", quantity: 1 }] });
+    setDataorder({
+      ...dataorder,
+      products: [...dataorder.products, { product: "", quantity: 1 }],
+    });
   };
 
   const addGroup = () => {
-    setDataorder({ ...dataorder, productGroups: [...dataorder.productGroups, { group: "", quantity: 1 }] });
+    setDataorder({
+      ...dataorder,
+      productGroups: [...dataorder.productGroups, { group: "", quantity: 1 }],
+    });
   };
 
   const handleInputChangeorder = (e) => {
@@ -180,21 +392,39 @@ const Orderstore = ({ onClose }) => {
     setLoading(true);
 
     try {
-      const orderData = {
+    let orderData;
+
+    if (editorder) {
+      // تعديل: حافظ على الكستمور الأصلي
+      orderData = { ...dataorder };
+    } else {
+      // إضافة: الكستمور هو السيرفر الحالي (me)
+      orderData = {
         ...dataorder,
-        customer: me._id, // always set customer to the logged-in user
+        customer: me._id,
       };
+    }
       if (editorder) {
         await updateorder(editorder, orderData);
       } else {
         await axios.post("http://localhost:3000/api/orders/in-store", orderData, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         });
       }
-
-      setDataorder({ customer: "", products: [], productGroups: [], paymentMethod: "cash", status: "confirmed" });
+      // reset
+      setDataorder({
+        customer: "",
+        products: [],
+        productGroups: [],
+        paymentMethod: "cash",
+        status: "confirmed",
+        isInStore: true,
+        tableId: null,
+      });
       setEditorder(null);
-      fetchOrders();
     } catch (err) {
       console.error("Error saving order:", err);
       alert("Error saving order");
@@ -205,13 +435,23 @@ const Orderstore = ({ onClose }) => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-center md:text-left">Orders Management</h1>
-      <button className="btn btn-secondary mb-4" onClick={onClose}>x</button>
+      <h1 className="text-2xl font-bold mb-4 text-center md:text-left">
+        Orders Management
+      </h1>
+      <button className="btn btn-secondary mb-4" onClick={onClose}>
+        x
+      </button>
       <form onSubmit={handleSubmit} className="form bg-white rounded-lg shadow-md">
         <h2 className="text-xl font-bold mb-4 text-center">📝 Order Form</h2>
 
         {/* Customer hidden input */}
         <input type="hidden" name="customer" value={me._id || ""} />
+
+        {/* Select Table */}
+        <SelectTable
+          selectedTable={dataorder.tableId}
+          setSelectedTable={(id) => setDataorder({ ...dataorder, tableId: id })}
+        />
 
         {/* Products section */}
         <div className="input-group">
@@ -337,6 +577,7 @@ const Orderstore = ({ onClose }) => {
           >
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
+            <option value="paid">Paid</option>
           </select>
         </div>
 
@@ -448,6 +689,16 @@ const Orderstore = ({ onClose }) => {
                               Pending
                             </button>
                           )}
+                          {order.status !== "paid" && (
+                            <button onClick={() => updateStatuspaid(order._id)} className="status">
+                              Paid
+                            </button>
+                          )}
+                          {order.status !== "confirmed" && (
+                            <button onClick={() => updateStatusconfirmed(order._id)} className="status">
+                              Confirmed
+                            </button>
+                          )}
                           <button onClick={() => deleteOrder(order._id)} className="delete">
                             Delete
                           </button>
@@ -456,6 +707,9 @@ const Orderstore = ({ onClose }) => {
                           </button>
                           <button className="edit" onClick={() => setDetails(order)}>
                             Details
+                          </button>
+                          <button onClick={() => printOrder(order)} className="edit">
+                            Print
                           </button>
                         </td>
                       </tr>
@@ -470,4 +724,4 @@ const Orderstore = ({ onClose }) => {
   );
 };
 
-export default Orderstore;
+export default Orderserver;

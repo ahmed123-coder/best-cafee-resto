@@ -3,11 +3,13 @@ import axios from "axios";
 import "../style/Table.css";
 import Admin from "./admin";
 import { QRCodeCanvas } from "qrcode.react";
+import { io } from "socket.io-client";  // 👈
 
 function TableAdminPage() {
   const [tables, setTables] = useState([]);
   const [users, setUsers] = useState([]); // ✅ قائمة المستخدمين (السرفرات)
   const [token] = useState(localStorage.getItem("token"));
+  const socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
   const [formdata, setFormdata] = useState({
     number: "",
     capacity: "",
@@ -102,7 +104,27 @@ function TableAdminPage() {
 
   useEffect(() => {
     fetchTables();
-    fetchUsers(); // ✅ نجيب المستخدمين عند تحميل الصفحة
+    fetchUsers();
+    // 👇 الاستماع للأحداث من السيرفر
+    socket.on("tableCreated", (newTable) => {
+      setTables((prev) => [newTable, ...prev]);
+    });
+
+    socket.on("tableUpdated", (updatedTable) => {
+      setTables((prev) =>
+        prev.map((t) => (t._id === updatedTable._id ? updatedTable : t))
+      );
+    });
+
+    socket.on("tableDeleted", (id) => {
+      setTables((prev) => prev.filter((t) => t._id !== id));
+    });
+    return () => {
+      socket.off("tableCreated");
+      socket.off("tableUpdated");
+      socket.off("tableDeleted");
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

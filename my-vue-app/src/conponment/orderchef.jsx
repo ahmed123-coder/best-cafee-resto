@@ -1,24 +1,27 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import "../style/Ordere.css";
-import Admin from "./admin";
+import "../admin/style/Ordere.css";
+import SelectTablechef from "./Selecttablechef";
 import { io } from "socket.io-client";  // 👈
 
-const OrdersAdminPage = () => {
+const OrderChefPage = () => {
   const [details, setDetails] = useState();
   const [status, setStatus] = useState(null);
   const [selectedServer, setSelectedServer] = useState("");
-  const [me, setMe] = useState({});
-  const [dateFilter, setDateFilter] = useState(""); // for date filter
+  const [selectchef, setSelectchef] = useState("");
   const socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
 
-  const [dataorder, setDataorder] = useState({
-    customer: "",
-    products: [],
-    productGroups: [],
-    paymentMethod: "cash",
-    status: "pending",
-  });
+  const [me, setMe] = useState({});
+
+    const [dataorder, setDataorder] = useState({
+      customer: "",
+      products: [],
+      productGroups: [],
+      paymentMethod: "cash",
+      status: "confirmed",
+      isInStore: true,
+      tableId: null,
+    });
 
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
@@ -28,55 +31,34 @@ const OrdersAdminPage = () => {
   const [token] = useState(localStorage.getItem("token"));
   const [editorder, setEditorder] = useState(null);
 
-  // Helper: get date range for filter
-  const getDateRange = (filter) => {
-    const today = new Date();
-    let start, end;
-    if (filter === "today") {
-      start = new Date();
-      start.setHours(start.getHours() - 24);
-      end = new Date();
-    } else if (filter === "yesterday") {
-      start = new Date();
-      start.setDate(start.getDate() - 2);
-      start.setHours(0,0,0,0);
-      end = new Date();
-      end.setDate(end.getDate() - 1);
-      end.setHours(23,59,59,999);
-    } else if (filter === "week") {
-      const first = today.getDate() - today.getDay();
-      start = new Date(today.setDate(first));
-      start.setHours(0,0,0,0);
-      end = new Date(today.setDate(first + 6));
-      end.setHours(23,59,59,999);
-    } else if (filter === "month") {
-      start = new Date(today.getFullYear(), today.getMonth(), 1);
-      end = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
-    }
-    return { start: start?.toISOString(), end: end?.toISOString() };
-  };
 
   // Fetch orders with server/date filter
-  const fetchOrders = async (filter = dateFilter, server = selectedServer) => {
+  const fetchOrders = async (server = selectedServer, chef = selectchef) => {
     let url = "";
-    let params = {};
-    if (filter) {
-      const { start, end } = getDateRange(filter);
-      params.start = start;
-      params.end = end;
-    }
+    // حساب start (قبل 24 ساعة) و end (الوقت الحالي)
+    const end = new Date();
+    const start = new Date();
+    start.setHours(start.getHours() - 24);
     if (server) {
       url = `http://localhost:3000/api/orders/in-store/server/${server}`;
-    } else {
+    }
+    else if (chef) {
+  url = `http://localhost:3000/api/orders/in-store/chef/${chef}`;
+}
+
+    else {
       url = `http://localhost:3000/api/orders/in-store`;
     }
     setLoading(true);
     try {
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
-        params,
+        params: {
+          start: start.toISOString(),
+          end: end.toISOString(),
+        },
       });
-      setOrders(response.data);
+      setOrders(response.data.filter(order => order.status !== "pending"));
     } catch (err) {
       console.error("Error fetching orders:", err);
     } finally {
@@ -90,7 +72,7 @@ const OrdersAdminPage = () => {
     fetchProducts();
     fetchProductGroups();
     fetchOrders();
-               // 📡 لو أوردر اتعمله create
+           // 📡 لو أوردر اتعمله create
   socket.on("orderCreated", (newOrder) => {
     setOrders((prev) => [newOrder, ...prev]);
   });
@@ -155,15 +137,14 @@ const OrdersAdminPage = () => {
     socket.off("updateProductGroup");
     socket.off("deleteProductGroup");
   };
-
     // eslint-disable-next-line
   }, [token]);
 
   // Refetch orders when server or date filter changes
   useEffect(() => {
-    fetchOrders(dateFilter, selectedServer);
+    fetchOrders(selectedServer, selectchef);
     // eslint-disable-next-line
-  }, [selectedServer, dateFilter]);
+  }, [selectedServer, selectchef]);
 
   const fetchme = async () => {
     try {
@@ -171,7 +152,7 @@ const OrdersAdminPage = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMe(response.data);
-      if (response.data.role === "customer") {
+      if (response.data.role === "customer" || response.data.role === "server") {
         window.location.href = "/login";
       }
     } catch (error) {
@@ -213,7 +194,6 @@ const OrdersAdminPage = () => {
       await axios.put(`http://localhost:3000/api/orders/${id}/in-store`, dataorder, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchOrders();
     } catch (err) {
       alert("Error updating order");
     }
@@ -224,26 +204,47 @@ const OrdersAdminPage = () => {
       await axios.put(`http://localhost:3000/api/orders/${id}/delivered/in-store`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchOrders();
     } catch (err) {
       alert("Error updating status");
     }
   };
-  const updateStatuscanceled = async (id) => {
+
+    const updateStatuspaid = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/canceled`);
-      fetchOrders();
-    } catch (error) {
+      await axios.put(
+        `http://localhost:3000/api/orders/${id}/paid/in-store`
+      );
+    } catch (err) {
+      alert("Error updating status to paid");
+    }
+  };
+
+  const updateStatusstarted = async (id) => {
+    try {
+      await axios.put(`http://localhost:3000/api/orders/${id}/started/in-store`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (err) {
       alert("Error updating status");
     }
   };
-  const updateStatuspending = async (id) => {
-    try{
-      await axios.put(`http://localhost:3000/api/orders/${id}/pending/in-store`, {}, {
+
+  const updateStatuscompleted = async (id) => {
+    try {
+      await axios.put(`http://localhost:3000/api/orders/${id}/completed/in-store`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchOrders();
-    }catch(err){
+    } catch (err) {
+      alert("Error updating status");
+    }
+  };
+
+  const updateStatusrejected = async (id) => {
+    try {
+      await axios.put(`http://localhost:3000/api/orders/${id}/rejected/in-store`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
       alert("Error updating status");
     }
   };
@@ -257,36 +258,11 @@ const OrdersAdminPage = () => {
       await axios.delete(`http://localhost:3000/api/details/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      fetchOrders();
     } catch (err) {
       alert("Error deleting order");
     }
   };
 
-    // توليد نص الفاتورة للطباعة
-  function generateReceipt(order) {
-    let receipt = `رقم الدور: ${order.queueNumber}\n`;
-    receipt += `-----------------------------\n`;
-    receipt += `المنتجات:\n`;
-    if (order.products && order.products.length > 0) {
-      order.products.forEach((item) => {
-        receipt += `- ${item.product.name} x${item.quantity} = ${item.product.price * item.quantity} دج\n`;
-      });
-    }
-    if (order.productGroups && order.productGroups.length > 0) {
-      receipt += `مجموعات المنتجات:\n`;
-      order.productGroups.forEach((item) => {
-        receipt += `- ${item.group.name} x${item.quantity} = ${item.group.price * item.quantity} دج\n`;
-      });
-    }
-    receipt += `-----------------------------\n`;
-    receipt += `الإجمالي: ${order.totalPrice} دج\n`;
-    receipt += `طريقة الدفع: ${order.paymentMethod}\n`;
-    receipt += `-----------------------------\n`;
-    receipt += `شكراً لتسوقكم معنا!\n`;
-    return receipt;
-  }
-  
     function printOrder(order) {
   const receipt = generateReceipt(order).replace(/\n/g, "<br>");
   const printWindow = window.open("", "_blank", "width=300,height=600");
@@ -355,7 +331,29 @@ const OrdersAdminPage = () => {
   printWindow.document.close();
 }
 
-
+  // توليد نص الفاتورة للطباعة
+  function generateReceipt(order) {
+    let receipt = `رقم الدور: ${order.queueNumber}\n`;
+    receipt += `-----------------------------\n`;
+    receipt += `المنتجات:\n`;
+    if (order.products && order.products.length > 0) {
+      order.products.forEach((item) => {
+        receipt += `- ${item.product.name} x${item.quantity} = ${item.product.price * item.quantity} دج\n`;
+      });
+    }
+    if (order.productGroups && order.productGroups.length > 0) {
+      receipt += `مجموعات المنتجات:\n`;
+      order.productGroups.forEach((item) => {
+        receipt += `- ${item.group.name} x${item.quantity} = ${item.group.price * item.quantity} دج\n`;
+      });
+    }
+    receipt += `-----------------------------\n`;
+    receipt += `الإجمالي: ${order.totalPrice} دج\n`;
+    receipt += `طريقة الدفع: ${order.paymentMethod}\n`;
+    receipt += `-----------------------------\n`;
+    receipt += `شكراً لتسوقكم معنا!\n`;
+    return receipt;
+  }
   const editedorder = async (order) => {
     setEditorder(order._id);
     setDataorder({
@@ -363,6 +361,9 @@ const OrdersAdminPage = () => {
       products: order.products.map((p) => ({ product: p.product._id, quantity: p.quantity })),
       productGroups: order.productGroups.map((pg) => ({ group: pg.group._id, quantity: pg.quantity })),
       paymentMethod: order.paymentMethod,
+      status: order.status,
+      isInStore: order.isInStore,
+      tableId: order.tableId || null,
     });
     console.log("order", order);
   };
@@ -404,11 +405,13 @@ const OrdersAdminPage = () => {
   const handleServerChange = async (e) => {
     const serverId = e.target.value;
     setSelectedServer(serverId);
+    setSelectchef("");
     // fetchOrders will be called by useEffect
   };
 
-  const handleDateFilter = (filter) => {
-    setDateFilter(filter);
+  const handleChefChange = async (e) => {
+    const chefId = e.target.value;
+    setSelectchef(chefId);
     // fetchOrders will be called by useEffect
   };
 
@@ -425,9 +428,8 @@ const OrdersAdminPage = () => {
         });
       }
 
-      setDataorder({ customer: "", products: [], productGroups: [], paymentMethod: "cash", status: "pending" });
+      setDataorder({ customer: "", products: [], productGroups: [], paymentMethod: "cash", status: "pending", isInStore: true, tableId: null });
       setEditorder(null);
-      fetchOrders();
     } catch (err) {
       console.error("Error saving order:", err);
       alert("Error saving order");
@@ -438,29 +440,17 @@ const OrdersAdminPage = () => {
 
   return (
     <div className="p-6">
-      <Admin />
       <h1 className="text-2xl font-bold mb-4 text-center md:text-left">Orders Management</h1>
       <form onSubmit={handleSubmit} className="form space-y-4 bg-white p-6 rounded-lg shadow-md">
         {/* Customer selection */}
-        <div className="input-group">
-          <label className="block text-sm font-medium text-gray-700">Customer:</label>
-          <select
-            name="customer"
-            value={dataorder.customer}
-            onChange={handleInputChangeorder}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="">Select a customer</option>
-            {users.filter(user => user.role !== "customer").map((user) => (
-              <option key={user._id} value={user._id}>
-                {user.firstName} {user.lastName}
-              </option>
-            ))}
-            <option value="Guest">
-              Guest
-            </option>
-          </select>
-        </div>
+                {/* Customer hidden input */}
+        <input type="hidden" name="customer" value={me._id || ""} />
+
+        {/* Select Table */}
+        <SelectTablechef
+          selectedTable={dataorder.tableId}
+          setSelectedTable={(id) => setDataorder({ ...dataorder, tableId: id })}
+        />
 
         {/* Products section */}
         <div className="input-group">
@@ -553,7 +543,7 @@ const OrdersAdminPage = () => {
           type="button"
           className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
           onClick={() => {
-            setDataorder({ customer: "", products: [], productGroups: [], paymentMethod: "cash", status: "pending" });
+            setDataorder({ customer: "", products: [], productGroups: [], paymentMethod: "cash", status: "pending", isInStore: true, tableId: null });
             setEditorder(null);
           }}
         >
@@ -613,14 +603,6 @@ const OrdersAdminPage = () => {
         ) : (
           <div className="container p-6 bg-gray-100 min-h-screen">
 
-            {/* Date Filter Buttons */}
-            <div className="filter-buttons">
-              <button onClick={() => handleDateFilter("today")}>Today</button>
-              <button onClick={() => handleDateFilter("yesterday")}>Yesterday</button>
-              <button onClick={() => handleDateFilter("week")}>This Week</button>
-              <button onClick={() => handleDateFilter("month")}>This Month</button>
-              <button onClick={() => handleDateFilter("")}>All Dates</button>
-            </div>
 
             {/* Status Filter Buttons */}
             <div className="filter-buttons">
@@ -638,6 +620,7 @@ const OrdersAdminPage = () => {
               </button>
             </div>
             {/* select server from user */}
+            <button onClick={() => { setSelectchef(me._id); setSelectedServer(""); }} className="all">me  the chef</button>
             <div className="filter-buttons">
               <select
                 value={selectedServer}
@@ -647,8 +630,8 @@ const OrdersAdminPage = () => {
                 <option value="">Select user</option>
                 {/* user.role = customer */}
                 {users
-                  .filter((user) => user.role !== "customer")
-                  .map((user) => (
+                  .filter((user) => user.role === "server")
+                  .map((user) => ( 
                     <option key={user._id} value={user._id}>
                       {user.firstName} {user.lastName}
                     </option>
@@ -685,14 +668,26 @@ const OrdersAdminPage = () => {
                               Mark Delivered
                             </button>
                           )}
-                          {order.status !== "cancelled" && (
-                            <button onClick={() => updateStatuscanceled(order._id)} className="status">
-                              Canceled
+                          {order.status !== "rejected" && (
+                            <button onClick={() => updateStatusrejected(order._id)} className="status">
+                              Rejected
                             </button>
                           )}
-                          {order.status !== "pending" && (
-                            <button onClick={() => updateStatuspending(order._id)} className="status">
-                              Pending
+                          {
+                            order.status !== "paid" && (
+                              <button onClick={() => updateStatuspaid(order._id)} className="status">
+                                Mark Paid
+                              </button>
+                            )}
+                          {
+                            order.status !== "started" && (
+                              <button onClick={() => updateStatusstarted(order._id)} className="status">
+                                Mark Started
+                              </button>
+                            )}
+                            {order.status !== "completed" && (
+                            <button onClick={() => updateStatuscompleted(order._id)} className="status">
+                              Mark Completed
                             </button>
                           )}
                           <button onClick={() => deleteOrder(order._id)} className="delete">
@@ -720,4 +715,4 @@ const OrdersAdminPage = () => {
   );
 };
 
-export default OrdersAdminPage;
+export default OrderChefPage;

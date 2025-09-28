@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { io } from "socket.io-client";  // 👈
 
 function OrderStore({ onClose }) {
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
   const navigate = useNavigate();
+  const Socket = io("http://localhost:3000");
 
   const handleDeleteOrder = async (orderId) => {
     const token = localStorage.getItem("token");
@@ -44,10 +46,44 @@ function OrderStore({ onClose }) {
       };
 
       fetchUserAndOrders();
+      // 🟢 إعداد اتصال Socket.IO
+      const Socket = io("http://localhost:3000");
+      Socket.on("orderCreated", (newOrder) => {
+        setOrders((prev) => [newOrder, ...prev]);
+      });
+      Socket.on("orderUpdated", (updatedOrder) => {
+        setOrders((prev) =>
+          prev.map((o) => (o._id === updatedOrder._id ? updatedOrder : o))
+        );
+      });
+      Socket.on("orderDeleted", (id) => {
+        setOrders((prev) => prev.filter((o) => o._id !== id));
+      });
+  // all soket io of users
+  Socket.on("newUser", (newUser) => {
+    setUsers((prev) => [newUser, ...prev]);
+  });
+  Socket.on("updateUser", (updatedUser) => {
+    setUsers((prev) =>
+      prev.map((u) => (u._id === updatedUser._id ? updatedUser : u))
+    );
+  });
+  Socket.on("deleteUser", (id) => {
+    setUsers((prev) => prev.filter((u) => u._id !== id));
+  });
+
     } else {
       alert("عند تسجيل حساب ستتمتع بعديد المزايا");
       navigate("/");
     }
+    return () => {
+      Socket.off("orderCreated");
+      Socket.off("orderUpdated");
+      Socket.off("orderDeleted");
+      Socket.off("newUser");
+      Socket.off("updateUser");
+      Socket.off("deleteUser");
+    };
   }, [navigate]);
 
   return (

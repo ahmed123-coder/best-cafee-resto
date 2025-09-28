@@ -35,10 +35,13 @@ function Login() {
         if (userResponse.data.role === "admin") {
           navigate("/admin"); // Navigate to admin page if role is admin
         } else if (userResponse.data.role === "server") {
-          navigate("/store"); // Navigate to store page if role is server
+          navigate("/server"); // Navigate to server page if role is server
+        }
+        else if (userResponse.data.role === "chef") {
+          navigate("/chef"); // Navigate to chef page if role is chef
         }
         else {
-          navigate("/login"); // Default navigation for other roles
+          navigate("/store"); // Default navigation for other roles
         }
       }
     } catch (err) {

@@ -13,6 +13,7 @@ router.post("/", async (req, res) => {
   try {
     const newDetails = new DetailsClient(req.body);
     await newDetails.save();
+    req.emit("newDetailsClient", newDetails);
     res.status(201).json(newDetails);
   } catch (error) {
     res.status(500).json({ message: "Error creating client details", error });
@@ -28,7 +29,6 @@ router.get("/:id", async (req, res) => {
     if (!details) {
       return res.status(404).json({ message: "Order details not found." });
     }
-
     res.status(200).json(details);
   } catch (error) {
     console.error("Error fetching order details:", error);
@@ -72,6 +72,7 @@ router.delete("/:id", async (req, res) => {
       if (!deleted) {
         return res.status(404).json({ message: "Order details not found." });
       }
+      req.emit("deleteDetailsClient", id);
       res.status(200).json({ message: "Order details deleted successfully" });
     }
   } catch (err) {

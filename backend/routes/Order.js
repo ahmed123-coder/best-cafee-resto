@@ -81,6 +81,8 @@ router.post("/in-store", async (req, res) => {
       .populate("productGroups.group", "name price image");
 
     res.status(201).json(populatedOrder);
+    // 🟢 إرسال تحديثات عبر Socket.IO
+    req.io.emit("orderCreated", populatedOrder);
   } catch (error) {
     console.error("Error creating order:", error.message || error);
     res.status(500).json({ error: error.message || "Error creating order" });
@@ -122,7 +124,49 @@ router.get('/in-store', async (req, res) => {
   }
 });
 
-// GET order in store by server
+// get all orders of a specific chef
+router.get('/in-store/chef/:chefId', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (user.role !== "chef" && user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized to view orders" });
+    }
+    if (user.role === "chef" && String(user._id) !== req.params.chefId) {
+      return res.status(403).json({ message: "Not authorized to view this chef's orders" });
+    }
+
+    // params
+    const { chefId } = req.params;
+
+    // Date filter
+    let { start, end } = req.query;
+    let filter = { isInStore: true, customer: chefId };
+
+    if (start && end) {
+      filter.createdAt = { $gte: new Date(start), $lte: new Date(end) };
+    }
+
+    const orders = await Order.find(filter)
+      .populate("customer", "firstName lastName email")
+      .populate("products.product", "name price image")
+      .populate("productGroups.group", "name price image")
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching chef orders' });
+  }
+});
+
+
+// GET in-store orders (server, admin, chef)
 router.get('/in-store/server/:id', async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
@@ -131,34 +175,69 @@ router.get('/in-store/server/:id', async (req, res) => {
     }
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.id);
-    if(!user){
+    if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    else if(user.role === "server" || user.role === "admin" || user.role === "chef") {
-    // Date filter support
+
+    // فلتر التاريخ
     let { start, end } = req.query;
-    let filter = { isInStore: true, customer: req.params.id };
+    let dateFilter = {};
     if (start && end) {
-      filter.createdAt = {
-        $gte: new Date(start),
-        $lte: new Date(end)
+      dateFilter = {
+        createdAt: {
+          $gte: new Date(start),
+          $lte: new Date(end)
+        }
       };
     }
 
-    const orders = await Order.find(filter)
-      .populate("customer", "firstName lastName email")
-      .populate("products.product", "name price image")
-      .populate("productGroups.group", "name price image")
-      .sort({ createdAt: -1 });
-    res.json(orders);
-    }
-    else{
+    let orders = [];
+
+    if (user.role === "admin" || user.role === "chef") {
+      // الأدمن أو الشيف يشوف أوردرات سيرفر معين حسب req.params.id
+      orders = await Order.find({
+        isInStore: true,
+        ...dateFilter
+      })
+        .populate({
+          path: "tableId",
+          match: { serverId: req.params.id }, // الأوردرات الخاصة بالسيرفر المطلوب
+        })
+        .populate("customer", "firstName lastName email")
+        .populate("products.product", "name price image")
+        .populate("productGroups.group", "name price image")
+        .sort({ createdAt: -1 });
+
+      orders = orders.filter(order => order.tableId); // نحذف الأوردرات الفارغة
+      return res.json(orders);
+
+    } else if (user.role === "server") {
+      // السيرفر يشوف فقط أوردرات طاولاته الخاصة
+      orders = await Order.find({
+        isInStore: true,
+        ...dateFilter
+      })
+        .populate({
+          path: "tableId",
+          match: { serverId: user._id }, // فقط طاولاته
+        })
+        .populate("customer", "firstName lastName email")
+        .populate("products.product", "name price image")
+        .populate("productGroups.group", "name price image")
+        .sort({ createdAt: -1 });
+
+      orders = orders.filter(order => order.tableId);
+      return res.json(orders);
+
+    } else {
       return res.status(403).json({ message: "Unauthorized" });
     }
+
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching not in-store orders' });
+    res.status(500).json({ message: 'Error fetching in-store orders', error: err.message });
   }
 });
+
 
 // ----------- DYNAMIC ROUTES AFTER STATIC ROUTES -----------
 
@@ -177,7 +256,7 @@ router.put("/:id/pending/in-store", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     } 
 
-      const order = await Order.findById(req.params.id);
+      const order = await Order.findById(req.params.id).populate("tableId");
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
@@ -188,6 +267,10 @@ router.put("/:id/pending/in-store", async (req, res) => {
       if (user.role === "admin" || user.role === "chef" || String(order.tableId?.serverId) === String(user._id)) {
         order.status = "pending";
         await order.save();
+
+        // 🟢 إرسال تحديثات عبر Socket.IO
+        req.io.emit("orderUpdated", order);
+
         res.status(200).json(order);
       } else {
         return res.status(403).json({ error: "You are not authorized to update this order" });
@@ -222,6 +305,10 @@ router.put("/:id/completed/in-store", async (req, res) => {
       if (user.role === "admin" || user.role === "chef") {
         order.status = "completed";
         await order.save();
+
+        // 🟢 إرسال تحديثات عبر Socket.IO
+        req.io.emit("orderUpdated", order);
+
         res.status(200).json(order);
       } else {
         return res.status(403).json({ error: "You are not authorized to update this order" });
@@ -244,8 +331,7 @@ router.put("/:id/delivered/in-store", async (req, res) => {
     if(!user){
       return res.status(404).json({ message: "User not found" });
     }
-    if(user.role === "admin"){
-      const order = await Order.findById(req.params.id);
+      const order = await Order.findById(req.params.id).populate("tableId");
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
@@ -254,9 +340,9 @@ router.put("/:id/delivered/in-store", async (req, res) => {
       }
       if (user.role === "admin" || user.role === "chef" || String(order.tableId?.serverId) === String(user._id)) {
         order.status = "delivered";
+         req.io.emit("orderUpdated", order);
       await order.save();
       res.status(200).json(order);
-    }
   }
 } catch (error) {
     res.status(500).json({ error: "Error updating delivery status" });
@@ -361,6 +447,7 @@ router.put("/:id/in-store", async (req, res) => {
       order.tableId = tableId || order.tableId;
 
       await order.save();
+       req.io.emit("orderUpdated", order);
       return res.status(200).json(order);
     } else {
       return res.status(403).json({ message: "Not authorized" });
@@ -451,6 +538,9 @@ router.delete("/:id/in-store", async (req, res) => {
 
     await Order.findByIdAndDelete(req.params.id);
 
+    // 🟢 إرسال تحديثات عبر Socket.IO
+    req.io.emit("orderDeleted", req.params.id);
+
     res.status(200).json({ message: "Order deleted successfully" });
   } catch (err) {
     console.error("Error deleting order:", err);
@@ -482,7 +572,7 @@ router.get("/:id/detailclient", async (req, res) => {
   }
 });
 
-router.put("/:id/canceled", async (req, res) => {
+router.put("/:id/canceled/in-store", async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
@@ -498,7 +588,7 @@ router.put("/:id/canceled", async (req, res) => {
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
-    if (order.isInStore) {
+    if (!order.isInStore) {
       return res.status(400).json({ error: "Order is not in store" });
     }
     // if user id not equal id customer in order
@@ -507,6 +597,7 @@ router.put("/:id/canceled", async (req, res) => {
     }
     order.status = "canceled";
     await order.save();
+    req.io.emit("orderUpdated", order);
     res.status(200).json(order);
   } catch (error) {
     res.status(500).json({ error: "Error updating delivery status" });
@@ -514,7 +605,7 @@ router.put("/:id/canceled", async (req, res) => {
 });
 
 
-router.put("/:id/confirmed", async (req, res) => {
+router.put("/:id/confirmed/in-store", async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
@@ -526,11 +617,11 @@ router.put("/:id/confirmed", async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate("tableId");
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
-    if (order.isInStore) {
+    if (!order.isInStore) {
       return res.status(400).json({ error: "Order is not in store" });
     }
     // if user id not equal id customer in order
@@ -541,6 +632,8 @@ router.put("/:id/confirmed", async (req, res) => {
     if (user.role === "admin" || user.role === "chef" || String(order.tableId?.serverId) === String(user._id)) {
       order.status = "confirmed";
       await order.save();
+      // 🟢 إرسال تحديثات عبر Socket.IO
+      req.io.emit("orderUpdated", order);
       res.status(200).json(order);
     } else {
       return res.status(403).json({ error: "You are not authorized to update this order" });
@@ -550,7 +643,7 @@ router.put("/:id/confirmed", async (req, res) => {
   }
 });
 
-router.put("/:id/started", async (req, res) => {
+router.put("/:id/started/in-store", async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
@@ -566,7 +659,7 @@ router.put("/:id/started", async (req, res) => {
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
-    if (order.isInStore) {
+    if (!order.isInStore) {
       return res.status(400).json({ error: "Order is not in store" });
     }
     // if user id not equal id customer in order
@@ -576,6 +669,8 @@ router.put("/:id/started", async (req, res) => {
     // to confirmed when admin or chef
     if (user.role === "admin" || user.role === "chef") {
       order.status = "started";
+      // 🟢 إرسال تحديثات عبر Socket.IO
+      req.io.emit("orderUpdated", order);
       await order.save();
       res.status(200).json(order);
     } else {
@@ -586,7 +681,7 @@ router.put("/:id/started", async (req, res) => {
   }
 });
 
-router.put("/:id/rejected", async (req, res) => {
+router.put("/:id/rejected/in-store", async (req, res) => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
@@ -602,7 +697,7 @@ router.put("/:id/rejected", async (req, res) => {
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
-    if (order.isInStore) {
+    if (!order.isInStore) {
       return res.status(400).json({ error: "Order is not in store" });
     }
     // if not admin or not chef
@@ -610,6 +705,8 @@ router.put("/:id/rejected", async (req, res) => {
       return res.status(403).json({ error: "You are not authorized to reject this order" });
     }
     order.status = "rejected";
+    // 🟢 إرسال تحديثات عبر Socket.IO
+    req.io.emit("orderUpdated", order);
     await order.save();
     res.status(200).json(order);
   } catch (error) {
@@ -617,22 +714,28 @@ router.put("/:id/rejected", async (req, res) => {
   }
 });
 
-router.put("/:id/paid", async (req, res) => {
+router.put("/:id/paid/in-store", async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id);
+    const order = await Order.findById(req.params.id).populate("tableId");
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
-    if (order.isInStore) {
+    if (!order.isInStore) {
       return res.status(400).json({ error: "Order is not in store" });
     }
+
+    // Update order status
     order.status = "paid";
     await order.save();
+    // 🟢 إرسال تحديثات عبر Socket.IO
+    req.io.emit("orderUpdated", order);
     res.status(200).json(order);
   } catch (error) {
+    console.error("Error updating order to paid:", error);
     res.status(500).json({ error: "Error updating delivery status" });
   }
 });
+
 
 // Get orders for a specific user
 router.get("/user/:userId", async (req, res) => {

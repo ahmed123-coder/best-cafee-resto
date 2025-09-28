@@ -2,18 +2,18 @@ import React, { useState, useEffect } from "react";
 import Products from "../conponment/products";
 import GroupProducts from "../conponment/grouproducts";
 import CartSidebarserverchef from "../conponment/serverchefcartuser";
-import SelectTable from "../conponment/SelectTable";
+import SelectTablechef from "../conponment/Selecttablechef";
 import Navbar from "../conponment/storenavbar";
-import Orderserver from "../conponment/orderserver";
+import OrderChefPage from "../conponment/orderchef";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { io } from "socket.io-client";  // 👈
 
 function Server() {
   const location = useLocation();
+  const Socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
   const token = localStorage.getItem("token") || "";
   const { productId, groupId, quantity } = location.state || {};
-  const socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
   const [searchTerm, setSearchTerm] = useState("");
   const [user, setUser] = useState({});
   const [products, setProducts] = useState([]);
@@ -40,7 +40,7 @@ function Server() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data);
-        if (response.data.role === "customer" || response.data.role === "chef" ) {
+        if (response.data.role === "customer" || response.data.role === "server") {
           window.location.href = "/login";
         }
       } catch (error) {
@@ -57,44 +57,43 @@ function Server() {
       setGroups(res.data);
     });
 
-    const storedCart = JSON.parse(localStorage.getItem("serverCart")) || {
+    const storedCart = JSON.parse(localStorage.getItem("chefCart")) || {
       products: [],
       groupproducts: [],
     };
     setCartProducts(storedCart.products || []);
     setCartGroups(storedCart.groupproducts || []);
-          socket.on("newProduct", (newProduct) => {
-    setProducts((prev) => [newProduct, ...prev]);
-  });
-  socket.on("updateProduct", (updatedProduct) => {
-    setProducts((prev) =>
-      prev.map((p) => (p._id === updatedProduct._id ? updatedProduct : p))
-    );
-  });
-  socket.on("deleteProduct", (id) => {
-    setProducts((prev) => prev.filter((p) => p._id !== id));
-  });
-  socket.on("newProductGroup", (newProductGroup) => {
-    setGroups((prev) => [newProductGroup, ...prev]);
-  });
-  socket.on("updateProductGroup", (updatedProductGroup) => {
-    setGroups((prev) =>
-      prev.map((p) => (p._id === updatedProductGroup._id ? updatedProductGroup : p))
-    );
-  });
-  socket.on("deleteProductGroup", (id) => {
-    setGroups((prev) => prev.filter((p) => p._id !== id));
-  });
-
+    Socket.on("newProduct", (newProduct) => {
+      setProducts((prev) => [newProduct, ...prev]);
+    });
+    Socket.on("updateProduct", (updatedProduct) => {
+      setProducts((prev) =>
+        prev.map((p) => (p._id === updatedProduct._id ? updatedProduct : p))
+      );
+    });
+    Socket.on("deleteProduct", (id) => {
+      setProducts((prev) => prev.filter((p) => p._id !== id));
+    });
+    Socket.on("newProductGroup", (newProductGroup) => {
+      setGroups((prev) => [newProductGroup, ...prev]);
+    });
+    Socket.on("updateProductGroup", (updatedProductGroup) => {
+      setGroups((prev) =>
+        prev.map((p) => (p._id === updatedProductGroup._id ? updatedProductGroup : p))
+      );
+    });
+    Socket.on("deleteProductGroup", (id) => {
+      setGroups((prev) => prev.filter((p) => p._id !== id));
+    });
     return () => {
-      socket.off("newProduct");
-      socket.off("updateProduct");
-      socket.off("deleteProduct");
-      socket.off("newProductGroup");
-      socket.off("updateProductGroup");
-      socket.off("deleteProductGroup");
-    };
-  }, []);
+      Socket.off("newProduct");
+      Socket.off("updateProduct");
+      Socket.off("deleteProduct");
+      Socket.off("newProductGroup");
+      Socket.off("updateProductGroup");
+      Socket.off("deleteProductGroup");
+  };
+}, []);
 
 
   const handleSearch = (term) => {
@@ -103,7 +102,7 @@ function Server() {
 
   const updateLocalStorage = (products, groups) => {
     localStorage.setItem(
-      "serverCart",
+      "chefCart",
       JSON.stringify({ products, groupproducts: groups })
     );
   };
@@ -169,7 +168,7 @@ function Server() {
     <div className="homepage">
       <Navbar 
         token={token}
-        to={"/server"}
+        to={"/chef"}
         isCartOpen={isCartOpen}
         setIsCartOpen={setIsCartOpen}
         darkMode={darkMode}
@@ -192,10 +191,10 @@ function Server() {
       />
       <div className="projectsandservices">
         {cartorderdetails === true ? (
-          <Orderserver onClose={() => setCartOrderDetails(false)}/>
+          <OrderChefPage onClose={() => setCartOrderDetails(false)}/>
         ) : (
           <>
-                <SelectTable
+                <SelectTablechef
         selectedTable={selectedTable}
         setSelectedTable={setSelectedTable}
       />

@@ -9,7 +9,8 @@ const Navbar = ({
   setcartorderdetails,
   iscartorderdetails,
   token,
-  onSearchChange
+  onSearchChange,
+  to
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -33,7 +34,7 @@ const Navbar = ({
       <div className="navbar">
         {/* Logo */}
         <div className="navbar-logo">
-          <a href="/store">
+          <a href={to || "/"}>
             <i className="bi bi-shop-window"></i>
           </a>
         </div>

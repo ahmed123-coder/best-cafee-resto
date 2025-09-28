@@ -13,6 +13,8 @@ import Store from "./pages/store";
 import Dashboard from "./admin/pages/Dashboard";
 import OrdersAdminPage from "./admin/pages/ordere";
 import TableAdminPage from "./admin/pages/TableAdmin";
+import Server from "./pages/servere";
+import Chef from "./pages/chef";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -29,6 +31,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/admin" element={<Admin darkMode={darkMode}/>} />
         <Route path="/store" element={<Store />} />
+        <Route path="/server" element={<Server />} />
+        <Route path="/chef" element={<Chef />} />
         {/* Nested Admin Routes */}
         <Route path="/admin/users" element={<User />} />
         <Route path="/admin/categories" element={<Category />} />
