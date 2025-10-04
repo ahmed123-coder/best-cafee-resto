@@ -3,6 +3,7 @@ import axios from "axios";
 import "../style/Ordere.css";
 import Admin from "./admin";
 import { io } from "socket.io-client";  // 👈
+import { StaticRouterProvider } from "react-router-dom";
 
 const OrdersAdminPage = () => {
   const [details, setDetails] = useState();
@@ -231,9 +232,19 @@ const OrdersAdminPage = () => {
   };
   const updateStatuscanceled = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/canceled`);
+      await axios.put(`http://localhost:3000/api/orders/${id}/canceled/in-store`,);
       fetchOrders();
     } catch (error) {
+      alert("Error updating status");
+    }
+  };
+  const updateStatusCompleted = async (id) => {
+    try{
+      await axios.put(`http://localhost:3000/api/orders/${id}/completed/in-store`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchOrders();
+    }catch(err){
       alert("Error updating status");
     }
   };
@@ -244,6 +255,46 @@ const OrdersAdminPage = () => {
       });
       fetchOrders();
     }catch(err){
+      alert("Error updating status");
+    }
+  };
+  const confirmOrder = async (id) => {
+    try {
+      await axios.put(`http://localhost:3000/api/orders/${id}/confirm/in-store`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchOrders();
+    } catch (err) {
+      alert("Error confirming order");
+    }
+  };
+  const updateStatusStarted = async (id) => {
+    try {
+      await axios.put(`http://localhost:3000/api/orders/${id}/started/in-store`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchOrders();
+    } catch (err) {
+      alert("Error updating status");
+    }
+  };
+
+  const updateStatusRejected = async (id) => {
+    try {
+      await axios.put(`http://localhost:3000/api/orders/${id}/reject/in-store`, {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchOrders();
+    } catch (err) {
+      alert("Error updating status");
+    }
+  };
+
+  const updateStatusPaid = async (id) => {
+    try {
+      await axios.put(`http://localhost:3000/api/orders/${id}/paid/in-store`);
+      fetchOrders();
+    } catch (err) {
       alert("Error updating status");
     }
   };
@@ -630,9 +681,13 @@ const OrdersAdminPage = () => {
               <button onClick={() => setStatus("delivered")} className="completed">
                 Completed
               </button>
+              <button onClick={() => setStatus("completed")} className="completed">
+                Completed
+              </button>
               <button onClick={() => setStatus("pending")} className="pending">
                 Pending
               </button>
+
               <button onClick={() => setStatus(null)} className="all">
                 All
               </button>
@@ -685,6 +740,13 @@ const OrdersAdminPage = () => {
                               Mark Delivered
                             </button>
                           )}
+                          {
+                            order.status !== "completed" && (
+                              <button onClick={() => updateStatusCompleted(order._id)} className="status">
+                                Completed
+                              </button>
+                            )
+                          }
                           {order.status !== "cancelled" && (
                             <button onClick={() => updateStatuscanceled(order._id)} className="status">
                               Canceled
@@ -695,6 +757,28 @@ const OrdersAdminPage = () => {
                               Pending
                             </button>
                           )}
+                          {order.status !== "confirmed" && (
+                            <button onClick={() => confirmOrder(order._id)} className="status">
+                              Confirmed
+                            </button>
+                          )}
+                          {
+                            order.status !== "started" && (
+                              <button onClick={() => updateStatusStarted(order._id)} className="status">
+                                Started
+                              </button>
+                            )}
+                          {order.status !== "rejected" && (
+                            <button onClick={() => updateStatusRejected(order._id)} className="status">
+                              Rejected
+                            </button>
+                          )}
+                          {
+                            order.status !== "paid" && (
+                              <button onClick={() => updateStatusPaid(order._id)} className="status">
+                                Paid
+                              </button>
+                            )}
                           <button onClick={() => deleteOrder(order._id)} className="delete">
                             Delete
                           </button>
