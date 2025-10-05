@@ -23,7 +23,7 @@ function User() {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/users", {
+      const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/users", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -37,7 +37,7 @@ function User() {
 
   const addUser = async (formdata) => {
     try {
-      await axios.post("http://localhost:3000/api/users/admin", formdata, {
+      await axios.post("https://cafe-resto-c1i3.onrender.com/api/users/admin", formdata, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -52,7 +52,7 @@ function User() {
 
   const handleDeleteUser = async (userId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/users/${userId}`, {
+      await axios.delete(`https://cafe-resto-c1i3.onrender.com/api/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -76,7 +76,7 @@ function User() {
 
   const updateUser = async (userId) => {
     try {
-      await axios.put(`http://localhost:3000/api/users/${userId}`, formdata, {
+      await axios.put(`https://cafe-resto-c1i3.onrender.com/api/users/${userId}`, formdata, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
