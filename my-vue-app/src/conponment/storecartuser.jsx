@@ -21,14 +21,14 @@ function CartUserSidebarstore({
   const location = useLocation();
   const { productId, groupId, quantity } = location.state || {};
   const [user, setUser] = useState(null);
-  const Socket = io("http://localhost:3000");
+  const Socket = io("https://cafe-resto-c1i3.onrender.com");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       const fetchUser = async () => {
         try {
-          const response = await axios.get("http://localhost:3000/api/users/me", {
+          const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/users/me", {
             headers: { Authorization: `Bearer ${token}` },
           });
           setUser(response.data);
@@ -176,7 +176,7 @@ function CartUserSidebarstore({
       }
       // إرسال الطلب إلى الخادم
       const responseOrder = await axios.post(
-        "http://localhost:3000/api/orders/in-store",
+        "https://cafe-resto-c1i3.onrender.com/api/orders/in-store",
         orderData,
         {
           headers: { "Content-Type": "application/json" },
