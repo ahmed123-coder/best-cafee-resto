@@ -25,7 +25,7 @@ const ProductsAdmin = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/products");
+      const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/products");
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -34,7 +34,7 @@ const ProductsAdmin = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/categorys", {
+      const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/categorys", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setCategories(response.data);
@@ -45,7 +45,7 @@ const ProductsAdmin = () => {
 
   const deleteProduct = async (id) => {
     try {
-      await axios.delete(`http://localhost:3000/api/products/${id}`, {
+      await axios.delete(`https://cafe-resto-c1i3.onrender.com/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchProducts();
@@ -98,7 +98,7 @@ const ProductsAdmin = () => {
     try {
       if (editProduct) {
         await axios.put(
-          `http://localhost:3000/api/products/${editProduct}`,
+          `https://cafe-resto-c1i3.onrender.com/api/products/${editProduct}`,
           data,
           {
             headers: {
@@ -109,7 +109,7 @@ const ProductsAdmin = () => {
         );
       } else {
         await axios.post(
-          "http://localhost:3000/api/products",
+          "https://cafe-resto-c1i3.onrender.com/api/products",
           data,
           {
             headers: {
