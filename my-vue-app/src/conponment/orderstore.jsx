@@ -7,13 +7,13 @@ function OrderStore({ onClose }) {
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
   const navigate = useNavigate();
-  const Socket = io("http://localhost:3000");
+  const Socket = io("https://cafe-resto-c1i3.onrender.com");
 
   const handleDeleteOrder = async (orderId) => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        await axios.put(`http://localhost:3000/api/orders/${orderId}/canceled`);
+        await axios.put(`https://cafe-resto-c1i3.onrender.com/api/orders/${orderId}/canceled`);
         setOrders(orders.filter((order) => order._id !== orderId));
       } catch (error) {
         console.error("Error deleting order:", error);
@@ -32,13 +32,13 @@ function OrderStore({ onClose }) {
     if (token) {
       const fetchUserAndOrders = async () => {
         try {
-          const userRes = await axios.get("http://localhost:3000/api/users/me", {
+          const userRes = await axios.get("https://cafe-resto-c1i3.onrender.com/api/users/me", {
             headers: { Authorization: `Bearer ${token}` },
           });
           const userData = userRes.data;
           setUser(userData);
 
-          const ordersRes = await axios.get(`http://localhost:3000/api/orders/in-store/user/${userData._id}`);
+          const ordersRes = await axios.get(`https://cafe-resto-c1i3.onrender.com/api/orders/in-store/user/${userData._id}`);
           setOrders(ordersRes.data);
         } catch (error) {
           console.error("Error fetching user data:", error);
@@ -47,7 +47,7 @@ function OrderStore({ onClose }) {
 
       fetchUserAndOrders();
       // 🟢 إعداد اتصال Socket.IO
-      const Socket = io("http://localhost:3000");
+      const Socket = io("https://cafe-resto-c1i3.onrender.com");
       Socket.on("orderCreated", (newOrder) => {
         setOrders((prev) => [newOrder, ...prev]);
       });
@@ -149,7 +149,7 @@ function OrderStore({ onClose }) {
               {order.products.map((product) => (
                 <li key={product.product._id} className="list-group-item d-flex justify-content-between align-items-center">
                   <div>
-                    <img src={`http://localhost:3000/${product.product.image}`} alt={product.product.name} width="40" height="40" className="me-2" />
+                    <img src={`https://cafe-resto-c1i3.onrender.com/${product.product.image}`} alt={product.product.name} width="40" height="40" className="me-2" />
                     {product.product.name} - الكمية: {product.quantity}
                   </div>
                   <span>{product.product.price} دينار</span>
@@ -162,7 +162,7 @@ function OrderStore({ onClose }) {
               {order.productGroups.map((group) => (
                 <li key={group.group._id} className="list-group-item d-flex justify-content-between align-items-center">
                   <div>
-                    <img src={`http://localhost:3000/${group.group.image}`} alt={group.group.name} width="40" height="40" className="me-2" />
+                    <img src={`https://cafe-resto-c1i3.onrender.com/${group.group.image}`} alt={group.group.name} width="40" height="40" className="me-2" />
                     {group.group.name} - الكمية: {group.quantity}
                   </div>
                   <span>{group.group.price} دينار</span>
