@@ -6,12 +6,12 @@ import { io } from "socket.io-client";  // 👈
 function SelectTable({ selectedTable, setSelectedTable }) {
   const [tables, setTables] = useState([]);
   const token = localStorage.getItem("token");
-  const Socket = io("http://localhost:3000");
+  const Socket = io("https://cafe-resto-c1i3.onrender.com");
 
   useEffect(() => {
     const fetchTables = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/tables/my-tables", {
+        const res = await axios.get("https://cafe-resto-c1i3.onrender.com/api/tables/my-tables", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTables(res.data);
