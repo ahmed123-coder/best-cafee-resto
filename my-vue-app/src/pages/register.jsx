@@ -26,7 +26,7 @@ function Register() {
       return;
     }
     try {
-      await axios.post("http://localhost:3000/api/users", formdata);
+      await axios.post("https://cafe-resto-c1i3.onrender.com/api/users", formdata);
       navigate("/login");
     } catch (error) {
       setError(error.response?.data?.message || "An error occurred during registration.");
