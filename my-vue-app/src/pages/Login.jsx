@@ -20,14 +20,14 @@ function Login() {
     e.preventDefault();
 
     try {
-      const response = await axios.post("http://localhost:3000/api/users/login", formData);
+      const response = await axios.post("https://cafe-resto-c1i3.onrender.com/api/users/login", formData);
 
       if (response.data.token) {
         // Store the token in localStorage
         localStorage.setItem("token", response.data.token);
 
         // Fetch user details to check the role
-        const userResponse = await axios.get("http://localhost:3000/api/users/me", {
+        const userResponse = await axios.get("https://cafe-resto-c1i3.onrender.com/api/users/me", {
           headers: { Authorization: `Bearer ${response.data.token}` },
         });
 
