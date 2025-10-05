@@ -5,12 +5,12 @@ import { io } from "socket.io-client";  // 👈
 function SelectTablechef({ selectedTable, setSelectedTable }) {
   const [tables, setTables] = useState([]);
   const token = localStorage.getItem("token");
-  const Socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
+  const Socket = io("https://cafe-resto-c1i3.onrender.com"); // 👈 غيّر الرابط حسب سيرفرك
 
   useEffect(() => {
     const fetchTables = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/tables", {
+        const res = await axios.get("https://cafe-resto-c1i3.onrender.com/api/tables", {
           headers: { Authorization: `Bearer ${token}` }
         });
         setTables(res.data);
