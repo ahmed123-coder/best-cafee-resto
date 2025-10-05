@@ -28,7 +28,7 @@ function Dashboardnotinstore() {
 
   // جلب قائمة المنتجات
   useEffect(() => {
-    axios.get("http://localhost:3000/api/products").then((res) => {
+    axios.get("https://cafe-resto-c1i3.onrender.com/api/products").then((res) => {
       setProductsList(res.data);
     });
   }, []);
@@ -38,8 +38,8 @@ function Dashboardnotinstore() {
     if (!start || !end) return;
     let url =
       mode === "days"
-        ? `http://localhost:3000/api/orders/stats/days/in-store?start=${start}&end=${end}`
-        : `http://localhost:3000/api/orders/stats/months/in-store?start=${start}&end=${end}`;
+        ? `https://cafe-resto-c1i3.onrender.com/api/orders/stats/days/in-store?start=${start}&end=${end}`
+        : `https://cafe-resto-c1i3.onrender.com/api/orders/stats/months/in-store?start=${start}&end=${end}`;
     axios.get(url).then((res) => {
       setChartData({
         labels: res.data.map((item) => item._id),
@@ -62,7 +62,7 @@ function Dashboardnotinstore() {
     if (!topStart || !topEnd) return;
     axios
       .get(
-        `http://localhost:3000/api/orders/stats/top-products-all/in-store?mode=${topMode}&start=${topStart}&end=${topEnd}`
+        `https://cafe-resto-c1i3.onrender.com/api/orders/stats/top-products-all/in-store?mode=${topMode}&start=${topStart}&end=${topEnd}`
       )
       .then((res) => {
         // ترتيب البيانات: كل منتج له بيانات لكل فترة
@@ -90,7 +90,7 @@ function Dashboardnotinstore() {
     if (!selectedProduct || !prodStart || !prodEnd) return;
     axios
       .get(
-        `http://localhost:3000/api/orders/stats/product/${selectedProduct}/days/in-store?start=${prodStart}&end=${prodEnd}`
+        `https://cafe-resto-c1i3.onrender.com/api/orders/stats/product/${selectedProduct}/days/in-store?start=${prodStart}&end=${prodEnd}`
       )
       .then((res) => {
         setProdChartData({
