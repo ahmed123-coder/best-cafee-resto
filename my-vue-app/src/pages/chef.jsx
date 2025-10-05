@@ -11,7 +11,7 @@ import { io } from "socket.io-client";  // 👈
 
 function Server() {
   const location = useLocation();
-  const Socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
+  const Socket = io("https://cafe-resto-c1i3.onrender.com"); // 👈 غيّر الرابط حسب سيرفرك
   const token = localStorage.getItem("token") || "";
   const { productId, groupId, quantity } = location.state || {};
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,7 +36,7 @@ function Server() {
     }
     const fetchuser = async () => {
       try {
-        const response = await axios.get("http://localhost:3000/api/users/me", {
+        const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/users/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data);
@@ -49,11 +49,11 @@ function Server() {
     };
     fetchuser();
 
-    axios.get("http://localhost:3000/api/products").then((res) => {
+    axios.get("https://cafe-resto-c1i3.onrender.com/api/products").then((res) => {
       setProducts(res.data);
     });
 
-    axios.get("http://localhost:3000/api/groupproducts").then((res) => {
+    axios.get("https://cafe-resto-c1i3.onrender.com/api/groupproducts").then((res) => {
       setGroups(res.data);
     });
 
