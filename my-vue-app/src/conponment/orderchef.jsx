@@ -9,7 +9,7 @@ const OrderChefPage = () => {
   const [status, setStatus] = useState(null);
   const [selectedServer, setSelectedServer] = useState("");
   const [selectchef, setSelectchef] = useState("");
-  const socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
+  const socket = io("https://cafe-resto-c1i3.onrender.com"); // 👈 غيّر الرابط حسب سيرفرك
 
   const [me, setMe] = useState({});
 
@@ -40,14 +40,14 @@ const OrderChefPage = () => {
     const start = new Date();
     start.setHours(start.getHours() - 24);
     if (server) {
-      url = `http://localhost:3000/api/orders/in-store/server/${server}`;
+      url = `https://cafe-resto-c1i3.onrender.com/api/orders/in-store/server/${server}`;
     }
     else if (chef) {
-  url = `http://localhost:3000/api/orders/in-store/chef/${chef}`;
+  url = `https://cafe-resto-c1i3.onrender.com/api/orders/in-store/chef/${chef}`;
 }
 
     else {
-      url = `http://localhost:3000/api/orders/in-store`;
+      url = `https://cafe-resto-c1i3.onrender.com/api/orders/in-store`;
     }
     setLoading(true);
     try {
@@ -148,7 +148,7 @@ const OrderChefPage = () => {
 
   const fetchme = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/users/me", {
+      const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/users/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMe(response.data);
@@ -162,7 +162,7 @@ const OrderChefPage = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/users", {
+      const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(response.data);
@@ -173,7 +173,7 @@ const OrderChefPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/products");
+      const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/products");
       setProducts(response.data);
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -182,7 +182,7 @@ const OrderChefPage = () => {
 
   const fetchProductGroups = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/groupproducts");
+      const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/groupproducts");
       setProductGroups(response.data);
     } catch (error) {
       console.error("Error fetching product groups:", error);
@@ -191,7 +191,7 @@ const OrderChefPage = () => {
 
   const updateorder = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/in-store`, dataorder, {
+      await axios.put(`https://cafe-resto-c1i3.onrender.com/api/orders/${id}/in-store`, dataorder, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (err) {
@@ -201,7 +201,7 @@ const OrderChefPage = () => {
 
   const updateStatus = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/delivered/in-store`, {}, {
+      await axios.put(`https://cafe-resto-c1i3.onrender.com/api/orders/${id}/delivered/in-store`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (err) {
@@ -212,7 +212,7 @@ const OrderChefPage = () => {
     const updateStatuspaid = async (id) => {
     try {
       await axios.put(
-        `http://localhost:3000/api/orders/${id}/paid/in-store`
+        `https://cafe-resto-c1i3.onrender.com/api/orders/${id}/paid/in-store`
       );
     } catch (err) {
       alert("Error updating status to paid");
@@ -221,7 +221,7 @@ const OrderChefPage = () => {
 
   const updateStatusstarted = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/started/in-store`, {}, {
+      await axios.put(`https://cafe-resto-c1i3.onrender.com/api/orders/${id}/started/in-store`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (err) {
@@ -231,7 +231,7 @@ const OrderChefPage = () => {
 
   const updateStatuscompleted = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/completed/in-store`, {}, {
+      await axios.put(`https://cafe-resto-c1i3.onrender.com/api/orders/${id}/completed/in-store`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (err) {
@@ -241,7 +241,7 @@ const OrderChefPage = () => {
 
   const updateStatusrejected = async (id) => {
     try {
-      await axios.put(`http://localhost:3000/api/orders/${id}/rejected/in-store`, {}, {
+      await axios.put(`https://cafe-resto-c1i3.onrender.com/api/orders/${id}/rejected/in-store`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (error) {
@@ -252,10 +252,10 @@ const OrderChefPage = () => {
   const deleteOrder = async (id) => {
     if (!window.confirm("Are you sure you want to delete this order?")) return;
     try {
-      await axios.delete(`http://localhost:3000/api/orders/${id}/in-store`, {
+      await axios.delete(`https://cafe-resto-c1i3.onrender.com/api/orders/${id}/in-store`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      await axios.delete(`http://localhost:3000/api/details/${id}`, {
+      await axios.delete(`https://cafe-resto-c1i3.onrender.com/api/details/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
     } catch (err) {
@@ -423,7 +423,7 @@ const OrderChefPage = () => {
       if (editorder) {
         await updateorder(editorder);
       } else {
-         await axios.post("http://localhost:3000/api/orders/in-store", dataorder, {
+         await axios.post("https://cafe-resto-c1i3.onrender.com/api/orders/in-store", dataorder, {
           headers: { "Content-Type": "application/json" },
         });
       }
