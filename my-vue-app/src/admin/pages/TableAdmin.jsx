@@ -9,7 +9,7 @@ function TableAdminPage() {
   const [tables, setTables] = useState([]);
   const [users, setUsers] = useState([]); // ✅ قائمة المستخدمين (السرفرات)
   const [token] = useState(localStorage.getItem("token"));
-  const socket = io("http://localhost:3000"); // 👈 غيّر الرابط حسب سيرفرك
+  const socket = io("https://cafe-resto-c1i3.onrender.com"); // 👈 غيّر الرابط حسب سيرفرك
   const [formdata, setFormdata] = useState({
     number: "",
     capacity: "",
@@ -25,7 +25,7 @@ function TableAdminPage() {
 
   const fetchTables = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/tables", {
+      const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/tables", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setTables(response.data);
@@ -36,7 +36,7 @@ function TableAdminPage() {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/users", {
+      const response = await axios.get("https://cafe-resto-c1i3.onrender.com/api/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       // ✅ نحتفظ فقط بالمستخدمين role = server
@@ -48,7 +48,7 @@ function TableAdminPage() {
 
   const addTable = async () => {
     try {
-      await axios.post("http://localhost:3000/api/tables", formdata, {
+      await axios.post("https://cafe-resto-c1i3.onrender.com/api/tables", formdata, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchTables();
@@ -61,7 +61,7 @@ function TableAdminPage() {
 
   const handleDeleteTable = async (tableId) => {
     try {
-      await axios.delete(`http://localhost:3000/api/tables/${tableId}`, {
+      await axios.delete(`https://cafe-resto-c1i3.onrender.com/api/tables/${tableId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchTables();
@@ -82,7 +82,7 @@ function TableAdminPage() {
 
   const updateTable = async (tableId) => {
     try {
-      await axios.put(`http://localhost:3000/api/tables/${tableId}`, formdata, {
+      await axios.put(`https://cafe-resto-c1i3.onrender.com/api/tables/${tableId}`, formdata, {
         headers: { Authorization: `Bearer ${token}` },
       });
       fetchTables();
